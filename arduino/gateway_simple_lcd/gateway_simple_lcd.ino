@@ -9,56 +9,32 @@
 #include <RH_RF95.h>  //See http://www.airspayce.com/mikem/arduino/RadioHead/
 #include <Adafruit_SSD1306.h>
 
-#define OLED_RESET 4
-Adafruit_SSD1306 display(OLED_RESET);
+// setup oled screen + buttons
+Adafruit_SSD1306 display = Adafruit_SSD1306();
+
+#define BUTTON_A 9 // #9 - GPIO #9, also analog input A7 used for (VBATPIN) which causes some awkwardness
+#define BUTTON_B 6
+#define BUTTON_C 5
+
+int BUTTON_A_STATE = 1;
+int BUTTON_B_STATE = 1;
+int BUTTON_C_STATE = 1;
+
+int LBUTTON_A_STATE = 1;
+int LBUTTON_B_STATE = 1;
+int LBUTTON_C_STATE = 1;
+
+int packetnum=0; // globally available for button presses
 
 #if (SSD1306_LCDHEIGHT != 32)
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif
-
-/* for feather32u4 
-#define RFM95_CS 8
-#define RFM95_RST 4
-#define RFM95_INT 7
-#define VBATPIN A9  /**/
  
 /* for feather m0  */
 #define RFM95_CS 8
 #define RFM95_RST 4
 #define RFM95_INT 3
 #define VBATPIN A7
- 
-/* for shield 
-#define RFM95_CS 10
-#define RFM95_RST 9
-#define RFM95_INT 7
-*/
- 
- 
-/* for ESP w/featherwing 
-#define RFM95_CS  2    // "E"
-#define RFM95_RST 16   // "D"
-#define RFM95_INT 15   // "B"
-*/
- 
-/* Feather 32u4 w/wing
-#define RFM95_RST     11   // "A"
-#define RFM95_CS      10   // "B"
-#define RFM95_INT     2    // "SDA" (only SDA/SCL/RX/TX have IRQ!)
-*/
- 
-/* Feather m0 w/wing 
-#define RFM95_RST     11   // "A"
-#define RFM95_CS      10   // "B"
-#define RFM95_INT     6    // "D"
-*/
- 
-/* Teensy 3.x w/wing 
-#define RFM95_RST     9   // "A"
-#define RFM95_CS      10   // "B"
-#define RFM95_INT     4    // "C"
-*/
-
  
 // Change to 434.0 or other frequency, must match RX's freq!
 #define RF95_FREQ 434.4
@@ -68,7 +44,7 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
  
 // Blinky on receipt
 #define LED 13
-
+  
 //Returns the battery voltage as a float.
 float voltage(){
   float measuredvbat = analogRead(VBATPIN);
@@ -118,19 +94,22 @@ void radiooff(){
 }
 
 void setup() {
+  Serial.begin(9600);
+  Serial.setTimeout(10);
+  delay(500);
+  
+ // pinMode(BUTTON_A, INPUT_PULLUP); // Don't use in this way as it's used for analog voltage
+  pinMode(BUTTON_B, INPUT_PULLUP);
+  pinMode(BUTTON_C, INPUT_PULLUP);
+
+  
   pinMode(LED, OUTPUT);     
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
   display.clearDisplay();
-
-  delay(2000);
-  //while (!Serial);
-  Serial.begin(9600);
-  Serial.setTimeout(10);
-  delay(100);
- 
-  radioon();
+  
+    radioon();
   digitalWrite(LED, LOW);
 
   // text display tests
@@ -164,7 +143,6 @@ long int uptime(){
 
 //Transmits one beacon and returns.
 void beacon(){
-  static int packetnum=0;
   
   //Serial.println("Transmitting..."); // Send a message to rf95_server
   
@@ -185,6 +163,8 @@ void beacon(){
  
   //Serial.println("Waiting for packet to complete..."); delay(10);
   rf95.waitPacketSent();
+  //pinMode(BUTTON_A, INPUT_PULLUP);
+
   packetnum++;
 }
 
@@ -286,10 +266,51 @@ void digipeat(){
 
 void loop(){
   static unsigned long lastbeacon=millis();
+
+  if ( analogRead(BUTTON_A) < 30 ) { // analogRead on button_a as its shared with vcc
+    BUTTON_A_STATE = 0;
+    if ( BUTTON_A_STATE != LBUTTON_A_STATE) {
+      LBUTTON_A_STATE = 0;
+      Serial.println("Button A");
+      display.setCursor(0,0);
+      display.setTextSize(2);
+      display.print("Button A");
+      display.display();
+      display.clearDisplay();
+    }
+  } else {
+    LBUTTON_A_STATE = 1;
+  }
+
+  if ( digitalRead(BUTTON_B) != LBUTTON_B_STATE) { // On B press, send beacon out.
+    LBUTTON_B_STATE = digitalRead(BUTTON_B);
+    if (! LBUTTON_B_STATE){
+      Serial.println("Button B");
+      display.setCursor(0,0);
+      display.setTextSize(2);
+      display.print("Beacon TX ");
+      display.print(packetnum);
+      display.display();
+      display.clearDisplay();
+      beacon();
+    }
+  }
   
+  if ( digitalRead(BUTTON_C) != LBUTTON_C_STATE) {
+    LBUTTON_C_STATE = digitalRead(BUTTON_C);
+    if (! LBUTTON_C_STATE){
+      Serial.println("Button C");
+      display.setCursor(0,0);
+      display.setTextSize(2);
+      display.print("Button C");
+      display.display();
+      display.clearDisplay();
+    }
+  }
+
   //Only digipeat if the battery is in good shape.
-  if(voltage()>3.5){
-    //Only digipeat when battery is high.
+  if(voltage()>3.5 || voltage()<0.5){
+    //Only digipeat when battery is high. <0.5 check for when button A is pressed on the oled board pulling it to 0
     digipeat();
 
     //Every ten minutes, we beacon just in case.
@@ -297,9 +318,10 @@ void loop(){
       beacon();
       lastbeacon=millis();
     }
-  }else{
+  } else {
     //Transmit a beacon every ten minutes when battery is low.
     radiooff();
+    Serial.println("Low Battery Pause");
     delay(10*60000);
     radioon();
     beacon();
