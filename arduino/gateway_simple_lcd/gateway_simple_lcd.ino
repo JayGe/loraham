@@ -248,6 +248,8 @@ void digipeat(){
   display.print((char*)buf);
   display.print(" rssi:");
   display.println((int) rssi);
+  display.print((float) voltage());
+  display.print("v");
   display.display();
   display.clearDisplay();
 
