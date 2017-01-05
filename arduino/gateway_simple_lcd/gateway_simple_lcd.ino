@@ -26,7 +26,7 @@ int LBUTTON_C_STATE = 1;
 
 int packetnum=0; // globally available for button presses
 
-String Last_Heard[5]={"1. Nothing", "2. Nothing", "3. Nothing", "4. Nothing", "5. Nothing"};
+String Last_Heard[5]={};
 
 #if (SSD1306_LCDHEIGHT != 32)
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
@@ -57,7 +57,7 @@ float voltage(){
 }
 
 void radioon(){
-  Serial.println("Feather LoRa RX Test!");
+  //Serial.println("Feather LoRa RX Test!");
   
   // manual reset
   digitalWrite(RFM95_RST, LOW);
@@ -179,7 +179,7 @@ bool shouldirt(uint8_t *buf, uint8_t len){
   }
   //Don't RT if the packet is too long.
   if(strlen((char*) buf)>128){
-    Serial.println("Length is too long.\n");
+    //Serial.println("Length is too long.\n");
     return false;
   }
   
@@ -188,7 +188,7 @@ bool shouldirt(uint8_t *buf, uint8_t len){
   delay(random(1000));
   //Don't RT if we've gotten an incoming packet in that time.
   if(rf95.available()){
-    Serial.println("Interrupted by another packet.");
+    //Serial.println("Interrupted by another packet.");
     return false;
   }
 
@@ -308,17 +308,17 @@ void loop(){
     LBUTTON_C_STATE = digitalRead(BUTTON_C);
     if (! LBUTTON_C_STATE){
       static int Times_Pressed=0;
-      Serial.println(Times_Pressed);
-      Serial.println("Button C");
-      display.setCursor(0,0);
-      display.setTextSize(2);
-      display.print("Button C");
-      display.display();
-      delay(500);
+      //Serial.println(Times_Pressed+1);
+      //Serial.println("Button C");
+//      display.setCursor(0,0);
+//      display.setTextSize(2);
+//      display.print("Button C");
+//      display.display();
+//      delay(500);
       display.clearDisplay();
       display.setCursor(0,0);
       display.setTextSize(1);
-      display.print(Times_Pressed);
+      display.print(Times_Pressed+1);
       display.print(" ");
       display.print(Last_Heard[Times_Pressed]);
       display.display();
