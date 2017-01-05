@@ -26,6 +26,8 @@ int LBUTTON_C_STATE = 1;
 
 int packetnum=0; // globally available for button presses
 
+String Last_Heard[5]={"1. Nothing", "2. Nothing", "3. Nothing", "4. Nothing", "5. Nothing"};
+
 #if (SSD1306_LCDHEIGHT != 32)
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif
@@ -44,7 +46,7 @@ RH_RF95 rf95(RFM95_CS, RFM95_INT);
  
 // Blinky on receipt
 #define LED 13
-  
+
 //Returns the battery voltage as a float.
 float voltage(){
   float measuredvbat = analogRead(VBATPIN);
@@ -101,7 +103,6 @@ void setup() {
  // pinMode(BUTTON_A, INPUT_PULLUP); // Don't use in this way as it's used for analog voltage
   pinMode(BUTTON_B, INPUT_PULLUP);
   pinMode(BUTTON_C, INPUT_PULLUP);
-
   
   pinMode(LED, OUTPUT);     
   pinMode(RFM95_RST, OUTPUT);
@@ -109,7 +110,7 @@ void setup() {
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);  // initialize with the I2C addr 0x3C (for the 128x32)
   display.clearDisplay();
   
-    radioon();
+  radioon();
   digitalWrite(LED, LOW);
 
   // text display tests
@@ -183,7 +184,8 @@ bool shouldirt(uint8_t *buf, uint8_t len){
   }
   
   //Random backoff if we might RT it.
-  delay(random(10000));
+  //delay(random(10000));
+  delay(random(1000));
   //Don't RT if we've gotten an incoming packet in that time.
   if(rf95.available()){
     Serial.println("Interrupted by another packet.");
@@ -221,18 +223,24 @@ void digipeat(){
       Serial.println((char*)buf);
       Serial.println("");
 
-  // text display tests
-  display.setTextSize(1);
-  display.setTextColor(WHITE);
-  display.setCursor(0,0);
-  display.print((char*)buf);
-  display.print(" rssi:");
-  display.print((int) rssi);
-  display.print(" ");
-  display.print((float) voltage());
-  display.print("v");
-  display.display();
-  display.clearDisplay();
+      // text display tests 
+      display.setTextSize(1);
+      display.setTextColor(WHITE);
+      display.setCursor(0,0);
+      display.print((char*)buf);
+      display.print(" rssi:");
+      display.print((int) rssi);
+      display.print(" ");
+      display.print((float) voltage());
+      display.print("v");
+      display.display();
+      display.clearDisplay();
+
+      for (int k = 4; k > 0; k--){   
+        Last_Heard[k] = Last_Heard[k-1];
+      }
+      Last_Heard[0]=(char*)buf;
+
 
       if(shouldirt(buf,len)){
         // Retransmit.
@@ -296,15 +304,36 @@ void loop(){
     }
   }
   
-  if ( digitalRead(BUTTON_C) != LBUTTON_C_STATE) {
+  if ( digitalRead(BUTTON_C) != LBUTTON_C_STATE) { // On C cycle through 5 last heard, not working well
     LBUTTON_C_STATE = digitalRead(BUTTON_C);
     if (! LBUTTON_C_STATE){
+      static int Times_Pressed=0;
+      Serial.println(Times_Pressed);
       Serial.println("Button C");
       display.setCursor(0,0);
       display.setTextSize(2);
       display.print("Button C");
       display.display();
+      delay(500);
       display.clearDisplay();
+      display.setCursor(0,0);
+      display.setTextSize(1);
+      display.print(Times_Pressed);
+      display.print(" ");
+      display.print(Last_Heard[Times_Pressed]);
+      display.display();
+      display.clearDisplay();
+
+      for (int i = 0; i < 5; i++){;
+        Serial.print(i+1);
+        Serial.print(" ");
+        Serial.println(Last_Heard[i]);
+      }
+      if (Times_Pressed < 4) {
+        Times_Pressed++;
+      } else {
+        Times_Pressed = 0;
+      }
     }
   }
 
