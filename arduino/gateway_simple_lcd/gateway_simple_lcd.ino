@@ -205,6 +205,8 @@ void digipeat(){
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
     int rssi=0;
+
+    blink_short();
     /*
      * When we receive a packet, we repeat it after a random
      * delay if:
@@ -231,7 +233,7 @@ void digipeat(){
       display.print(" rssi:");
       display.print((int) rssi);
       display.print(" ");
-      display.print((float) voltage());
+      display.print(voltage());
       display.print("v");
       display.display();
       display.clearDisplay();
@@ -239,9 +241,13 @@ void digipeat(){
       for (int k = 4; k > 0; k--){   
         Last_Heard[k] = Last_Heard[k-1];
       }
-      Last_Heard[0]=(char*)buf;
 
+      //Last_Heard[0]=(char*)buf;
 
+      char last_hrdrssi[RH_RF95_MAX_MESSAGE_LEN+64];
+      sprintf(last_hrdrssi, "%s rssi:%d", buf, rssi);
+      Last_Heard[0]=last_hrdrssi;
+     
       if(shouldirt(buf,len)){
         // Retransmit.
         Serial.println("TX ");
@@ -259,7 +265,6 @@ void digipeat(){
         rf95.send(data, strlen((char*) data));
         rf95.waitPacketSent();
         Serial.println((char*) data);
-        //digitalWrite(LED, LOW);
         Serial.println("");
       }else{
         Serial.println("Declining to retransmit.\n");
@@ -279,12 +284,29 @@ void loop(){
     BUTTON_A_STATE = 0;
     if ( BUTTON_A_STATE != LBUTTON_A_STATE) {
       LBUTTON_A_STATE = 0;
-      Serial.println("Button A");
+      static int Times_Pressed=0;
+
+      display.clearDisplay();
       display.setCursor(0,0);
-      display.setTextSize(2);
-      display.print("Button A");
+      display.setTextSize(1);
+      display.print(Times_Pressed+1);
+      display.print(" ");
+      display.print(Last_Heard[Times_Pressed]);
       display.display();
       display.clearDisplay();
+
+      for (int i = 0; i < 5; i++){;
+        Serial.print(i+1);
+        Serial.print(" ");
+        Serial.println(Last_Heard[i]);
+      }
+      if (Times_Pressed < 4) {
+        Times_Pressed++;
+      } else {
+        Times_Pressed = 0;
+      }
+
+      
     }
   } else {
     LBUTTON_A_STATE = 1;
@@ -307,39 +329,31 @@ void loop(){
   if ( digitalRead(BUTTON_C) != LBUTTON_C_STATE) { // On C cycle through 5 last heard, not working well
     LBUTTON_C_STATE = digitalRead(BUTTON_C);
     if (! LBUTTON_C_STATE){
-      static int Times_Pressed=0;
-      //Serial.println(Times_Pressed+1);
-      //Serial.println("Button C");
-//      display.setCursor(0,0);
-//      display.setTextSize(2);
-//      display.print("Button C");
-//      display.display();
-//      delay(500);
-      display.clearDisplay();
       display.setCursor(0,0);
-      display.setTextSize(1);
-      display.print(Times_Pressed+1);
-      display.print(" ");
-      display.print(Last_Heard[Times_Pressed]);
+      display.setTextSize(2);
+      display.print("Button C\n");
+      Serial.println("Button C");
+      display.print("VCC:");
+      display.print(voltage());
+      Serial.println(voltage());
+      
       display.display();
       display.clearDisplay();
-
-      for (int i = 0; i < 5; i++){;
-        Serial.print(i+1);
-        Serial.print(" ");
-        Serial.println(Last_Heard[i]);
-      }
-      if (Times_Pressed < 4) {
-        Times_Pressed++;
-      } else {
-        Times_Pressed = 0;
-      }
     }
   }
+  
+    digipeat(); //copy out of voltage check below 
 
+    //Every ten minutes, we beacon just in case.
+    if(millis()-lastbeacon>10*60000){
+      beacon();
+      lastbeacon=millis();
+    }
+    
+/* Skipping all of this while using with a oled for testing as the pin sharing with the button sometimes triggers the below still, might want to bridge button to different pin
   //Only digipeat if the battery is in good shape.
-  if(voltage()>3.5 || voltage()<0.5){
-    //Only digipeat when battery is high. <0.5 check for when button A is pressed on the oled board pulling it to 0
+  if(voltage()>3.5 || voltage()<1){
+    //Only digipeat when battery is high. <1 check for when button A is pressed on the oled board pulling it to 0
     digipeat();
 
     //Every ten minutes, we beacon just in case.
@@ -351,9 +365,29 @@ void loop(){
     //Transmit a beacon every ten minutes when battery is low.
     radiooff();
     Serial.println("Low Battery Pause");
+    display.setCursor(0,0);
+    display.setTextSize(1);
+    display.print("ZZZZZZZZ");
+    display.print(packetnum);
+    display.display();
+    display.clearDisplay();
     delay(10*60000);
     radioon();
     beacon();
   };
+  */
 }
 
+void blink_long() { 
+  digitalWrite(LED,HIGH);
+  delay(300);
+  digitalWrite(LED,LOW);
+  delay(25);
+}
+
+void blink_short() { 
+  digitalWrite(LED,HIGH);
+  delay(100);
+  digitalWrite(LED,LOW);
+  delay(25);
+}
