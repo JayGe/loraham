@@ -232,9 +232,9 @@ void digipeat(){
       display.print((char*)buf);
       display.print(" rssi:");
       display.print((int) rssi);
-      display.print(" ");
-      display.print(voltage());
-      display.print("v");
+ //     display.print(" ");
+ //     display.print(voltage());
+ //     display.print("v");
       display.display();
       display.clearDisplay();
 
@@ -306,7 +306,6 @@ void loop(){
         Times_Pressed = 0;
       }
 
-      
     }
   } else {
     LBUTTON_A_STATE = 1;
