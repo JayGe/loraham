@@ -27,7 +27,7 @@ int LBUTTON_C_STATE = 1;
 int packetnum=0; // globally available for button presses
 
 String Last_Heard[5]={};
-
+  
 #if (SSD1306_LCDHEIGHT != 32)
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif

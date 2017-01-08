@@ -5,7 +5,7 @@
  */
 
 #define CALLSIGN "GI7UGV-5"
-#define COMMENTS "UNO Dragino Shield"
+#define COMMENTS "UNO Dragino cycle"
  
 #include <SPI.h>
 #include <RH_RF95.h>  //See http://www.airspayce.com/mikem/arduino/RadioHead/
@@ -86,7 +86,7 @@ void radioon(int mode){
   delay(10);
   digitalWrite(RFM95_RST, HIGH);
   delay(10);
- 
+
   while (!rf95.init()) {
     Serial.println("LoRa radio init failed");
     while (1);
@@ -106,13 +106,13 @@ void radioon(int mode){
   // Bw31_25Cr48Sf512,    ///< Bw = 31.25 kHz, Cr = 4/8, Sf = 512chips/symbol, CRC on. Slow+long range
   // Bw125Cr48Sf4096, ///< Bw = 125 kHz, Cr = 4/8, Sf = 4096chips/symbol, CRC on. Slow+long range
   
-  rf95.setModemConfig(mode); // not the best way to do this, doesnt work on m0 
-
+  //rf95.setModemConfig(mode); // not the best way to do this, doesnt work on m0 
+  set_radiomode(mode);
   // The default transmitter power is 13dBm, using PA_BOOST.
   // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then 
   // you can set transmitter powers from 5 to 23 dBm:
-  rf95.setTxPower(23, false);
-  Serial.println("Set power to 23.");
+  rf95.setTxPower(5, false);
+  Serial.println("Set power to 5."); // Using 5 as high SF + high power isn't being received 
   Serial.print("Max packet length: "); Serial.println(RH_RF95_MAX_MESSAGE_LEN);
 }
 
@@ -135,7 +135,7 @@ void setup()
   delay(100);
  
   //radioon();
-  radioon(0);
+  radioon(0); //start at default 
 
   digitalWrite(LED, LOW);
 }
@@ -189,7 +189,7 @@ void beacon(){
 void loop(){
   //Turn the radio on.
   for (int i=0; i<4; i++){
-    radioon(i);
+  radioon(i);
   
   //radioon();
   //Transmit a beacon once every five minutes.
@@ -199,6 +199,18 @@ void loop(){
 
   // set beacon time
   delay(10000);
+  }
+}
+
+void set_radiomode(int mode) {
+  if (mode == 0) { 
+    rf95.setModemConfig(RH_RF95::Bw125Cr45Sf128);
+  } else if (mode == 1) {
+    rf95.setModemConfig(RH_RF95::Bw500Cr45Sf128);
+  } else if (mode == 2) {
+    rf95.setModemConfig(RH_RF95::Bw31_25Cr48Sf512);
+  } else if (mode == 3) {
+    rf95.setModemConfig(RH_RF95::Bw125Cr48Sf4096);
   }
 }
 
