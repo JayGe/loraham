@@ -1,4 +1,5 @@
 /* This is a beacon for the LoRaHam protocol by KK4VCZ.
+ * This test beacon is moving between the 4 modem configurations for testing purposes. The gateway should be too. 
  * https://github.com/travisgoodspeed/loraham/
  * 
  */
@@ -100,14 +101,12 @@ void radioon(int mode){
   Serial.print("Set Freq to: "); Serial.println(RF95_FREQ);
  
   // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
-  
   // Bw125Cr45Sf128 = 0,     ///< Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on. Default medium range
   // Bw500Cr45Sf128,            ///< Bw = 500 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on. Fast+short range
   // Bw31_25Cr48Sf512,    ///< Bw = 31.25 kHz, Cr = 4/8, Sf = 512chips/symbol, CRC on. Slow+long range
   // Bw125Cr48Sf4096, ///< Bw = 125 kHz, Cr = 4/8, Sf = 4096chips/symbol, CRC on. Slow+long range
-
-  //rf95.setModemConfig(2);
-  rf95.setModemConfig(mode);
+  
+  rf95.setModemConfig(mode); // not the best way to do this, doesnt work on m0 
 
   // The default transmitter power is 13dBm, using PA_BOOST.
   // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then 
