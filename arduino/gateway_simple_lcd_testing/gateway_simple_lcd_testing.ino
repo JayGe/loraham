@@ -27,7 +27,9 @@ int LBUTTON_C_STATE = 1;
 int packetnum=0; // globally available for button presses
 
 String Last_Heard[5]={};
-  
+
+String Mode_String;  
+
 #if (SSD1306_LCDHEIGHT != 32)
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
 #endif
@@ -85,6 +87,7 @@ void radioon(){
   // Bw500Cr45Sf128,            ///< Bw = 500 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on. Fast+short range
   // Bw31_25Cr48Sf512,    ///< Bw = 31.25 kHz, Cr = 4/8, Sf = 512chips/symbol, CRC on. Slow+long range
   // Bw125Cr48Sf4096, ///< Bw = 125 kHz, Cr = 4/8, Sf = 4096chips/symbol, CRC on. Slow+long range
+
   set_radiomode(0);
 
   //rf95.setModemConfig(RH_RF95::Bw125Cr45Sf128);
@@ -231,7 +234,10 @@ void digipeat(){
       //RH_RF95::printBuffer("Received: ", buf, len);
       //Serial.print("Got: ");
       buf[len]=0;
-      Serial.println("RX ");
+      Serial.print("RX ");
+      Serial.print(Mode_String);
+      Serial.print(" ");
+      Serial.println((int) rssi);
       Serial.println((char*)buf);
       Serial.println("");
 
@@ -242,9 +248,6 @@ void digipeat(){
       display.print((char*)buf);
       display.print(" rssi:");
       display.print((int) rssi);
- //     display.print(" ");
- //     display.print(voltage());
- //     display.print("v");
       display.display();
       display.clearDisplay();
 
@@ -282,8 +285,8 @@ void digipeat(){
     }else{
       Serial.println("Receive failed");
     }
-    Serial.print("Txmode ");
-    Serial.println(txmode);
+    Serial.print("RX mode ");
+    Serial.print(txmode);
     if (txmode<3){
       txmode++;
     } else  {
@@ -291,8 +294,9 @@ void digipeat(){
     }
     set_radiomode(txmode);
 
-    Serial.print("New Txmode ");
+    Serial.print(" New mode ");
     Serial.println(txmode);
+    Serial.println();
   }else{
     delay(10);
   }
@@ -415,12 +419,16 @@ void blink_short() {
 void set_radiomode(int mode) {
   if (mode == 0) { 
     rf95.setModemConfig(RH_RF95::Bw125Cr45Sf128);
+    Mode_String="Bw125Cr45Sf128";
   } else if (mode == 1) {
     rf95.setModemConfig(RH_RF95::Bw500Cr45Sf128);
+    Mode_String="Bw500Cr45Sf128";
   } else if (mode == 2) {
     rf95.setModemConfig(RH_RF95::Bw31_25Cr48Sf512);
+    Mode_String="Bw31_25Cr48Sf512";
   } else if (mode == 3) {
     rf95.setModemConfig(RH_RF95::Bw125Cr48Sf4096);
+    Mode_String="Bw125Cr48Sf4096";
   }
 }
 

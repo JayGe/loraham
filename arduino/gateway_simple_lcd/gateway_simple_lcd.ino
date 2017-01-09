@@ -228,7 +228,8 @@ void digipeat(){
       //RH_RF95::printBuffer("Received: ", buf, len);
       //Serial.print("Got: ");
       buf[len]=0;
-      Serial.println("RX ");
+      Serial.print("RX ");
+      Serial.println((int) rssi);
       Serial.println((char*)buf);
       Serial.println("");
 
@@ -239,9 +240,6 @@ void digipeat(){
       display.print((char*)buf);
       display.print(" rssi:");
       display.print((int) rssi);
- //     display.print(" ");
- //     display.print(voltage());
- //     display.print("v");
       display.display();
       display.clearDisplay();
 
