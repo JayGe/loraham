@@ -25,6 +25,7 @@ int LBUTTON_B_STATE = 1;
 int LBUTTON_C_STATE = 1;
 
 int packetnum=0; // globally available for button presses
+int powernum=5;
 
 String Last_Heard[5]={};
 
@@ -133,7 +134,7 @@ void setup() {
   display.clearDisplay();
 
   //Beacon once at startup.
-  beacon();
+  beacon(23);
 }
 
 //! Uptime in seconds, correcting for rollover.
@@ -151,21 +152,24 @@ long int uptime(){
 }
 
 //Transmits one beacon and returns.
-void beacon(){
+void beacon(int powernum){
   
   //Serial.println("Transmitting..."); // Send a message to rf95_server
   
   char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
   snprintf(radiopacket,
            RH_RF95_MAX_MESSAGE_LEN,
-           "BEACON %s VCC=%f count=%d uptime=%ld",
+           "BEACON %s VCC=%f count=%d uptime=%ld pwr=%d",
            CALLSIGN,
            (float) voltage(),
            packetnum,
-           uptime());
+           uptime(),
+           powernum);
 
   Serial.print("TX "); Serial.print(packetnum); Serial.print(": "); Serial.println(radiopacket);
   radiopacket[sizeof(radiopacket)] = 0;
+
+  rf95.setTxPower(powernum, false);
   
   //Serial.println("Sending..."); delay(10);
   rf95.send((uint8_t *)radiopacket, strlen((char*) radiopacket));
@@ -325,9 +329,16 @@ void loop(){
       display.setTextSize(2);
       display.print("Beacon TX ");
       display.print(packetnum);
+      display.print(" PWR ");
+      display.print(powernum);
       display.display();
       display.clearDisplay();
-      beacon();
+      beacon(powernum);
+      if (powernum==23) {
+        powernum = 5;
+      } else {
+        powernum++;
+      }
     }
   }
   
@@ -351,7 +362,7 @@ void loop(){
 
     //Every ten minutes, we beacon just in case.
     if(millis()-lastbeacon>10*60000){
-      beacon();
+      beacon(23);
       lastbeacon=millis();
     }
     
