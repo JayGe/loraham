@@ -204,7 +204,7 @@ void loop(){
   radiooff();
 
   // set beacon time
-  delay(10000);
+  delay(60000);
   }
 }
 

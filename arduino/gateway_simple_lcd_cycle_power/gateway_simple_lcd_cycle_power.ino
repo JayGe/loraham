@@ -189,6 +189,10 @@ bool shouldirt(uint8_t *buf, uint8_t len){
     //Serial.println("I've already retransmitted this one.\n");
     return false;
   }
+  if(strcasestr((char*) buf, "Pong")){
+    Serial.println("Not resending Pong.\n");
+    return false;
+  }
   //Don't RT if the packet is too long.
   if(strlen((char*) buf)>128){
     //Serial.println("Length is too long.\n");
@@ -334,22 +338,23 @@ void loop(){
       display.display();
       display.clearDisplay();
       beacon(powernum);
-      if (powernum==23) {
-        powernum = 5;
-      } else {
-        powernum++;
-      }
     }
   }
   
   if ( digitalRead(BUTTON_C) != LBUTTON_C_STATE) { // On C cycle through 5 last heard, not working well
     LBUTTON_C_STATE = digitalRead(BUTTON_C);
     if (! LBUTTON_C_STATE){
+      if (powernum==23) {
+        powernum = 5;
+      } else {
+        powernum++;
+      }
       display.setCursor(0,0);
       display.setTextSize(2);
-      display.print("Button C\n");
+      display.print("Power: ");
+      display.print(powernum);
       Serial.println("Button C");
-      display.print("VCC:");
+      display.print("\nVCC:");
       display.print(voltage());
       Serial.println(voltage());
       
