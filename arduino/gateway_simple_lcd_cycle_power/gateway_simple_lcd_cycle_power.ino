@@ -24,7 +24,8 @@ int LBUTTON_A_STATE = 1;
 int LBUTTON_B_STATE = 1;
 int LBUTTON_C_STATE = 1;
 
-int packetnum=0; // globally available for button presses
+int packetnum=0; 
+int pingnum=0; 
 int powernum=5;
 
 String Last_Heard[5]={};
@@ -168,7 +169,8 @@ void beacon(int powernum, bool ping){
            (ping) ? "PING" : "BEACON",
            CALLSIGN,
            (float) voltage(),
-           packetnum,
+           //packetnum,
+           (ping) ? pingnum : packetnum,
            uptime(),
            powernum);
 
@@ -184,18 +186,20 @@ void beacon(int powernum, bool ping){
   rf95.waitPacketSent();
   //pinMode(BUTTON_A, INPUT_PULLUP);
 
-  packetnum++;
+  //packetnum++;
+  (ping) ? pingnum++ : packetnum++;
 }
 
 
 //Handles retransmission of the packet.
 bool shouldirt(uint8_t *buf, uint8_t len){
+ 
   //Don't RT any packet containing our own callsign.
   if(strcasestr((char*) buf, CALLSIGN)){
     //Serial.println("I've already retransmitted this one.\n");
     return false;
   }
-  if(strcasestr((char*) buf, "Pong")){
+  if(strcasestr((char*) buf, "PONG")){
     Serial.println("Not resending Pong.\n");
     return false;
   }
@@ -338,7 +342,7 @@ void loop(){
       display.setCursor(0,0);
       display.setTextSize(2);
       display.print("Beacon TX ");
-      display.print(packetnum);
+      display.print(pingnum);
       display.print(" PWR ");
       display.print(powernum);
       display.display();
@@ -357,10 +361,17 @@ void loop(){
       }
       display.setCursor(0,0);
       display.setTextSize(2);
-      display.print("Power: ");
-      display.print(powernum);
+      display.print("Power:");
+
+      display.println(powernum);
+      display.setTextSize(1);
+
+      display.print("Beacon: ");
+      display.print(packetnum);
+      display.print(" Ping: ");
+      display.print(pingnum);
       Serial.println("Button C");
-      display.print("\nVCC:");
+      display.print("\nVCC: ");
       display.print(voltage());
       Serial.println(voltage());
       
