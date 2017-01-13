@@ -134,7 +134,7 @@ void setup() {
   display.clearDisplay();
 
   //Beacon once at startup.
-  beacon(23);
+  beacon(23,0);
 }
 
 //! Uptime in seconds, correcting for rollover.
@@ -151,15 +151,21 @@ long int uptime(){
   return(rollover+(millis()>>10));
 }
 
-//Transmits one beacon and returns.
-void beacon(int powernum){
+//Transmits one beacon and returns, takes a power input and whether the message is a PING or not and outputs differently
+void beacon(int powernum, bool ping){
   
   //Serial.println("Transmitting..."); // Send a message to rf95_server
-  
+  if (ping) {
+    Serial.println("ping");
+  } else {
+    Serial.println("noping");
+  }
   char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
   snprintf(radiopacket,
            RH_RF95_MAX_MESSAGE_LEN,
-           "BEACON %s VCC=%f count=%d uptime=%ld pwr=%d",
+           //"BEACON %s VCC=%f count=%d uptime=%ld pwr=%d",
+           "%s %s VCC=%f count=%d uptime=%ld pwr=%d",
+           (ping) ? "PING" : "BEACON",
            CALLSIGN,
            (float) voltage(),
            packetnum,
@@ -337,7 +343,7 @@ void loop(){
       display.print(powernum);
       display.display();
       display.clearDisplay();
-      beacon(powernum);
+      beacon(powernum, 1);
     }
   }
   
@@ -367,7 +373,7 @@ void loop(){
 
     //Every ten minutes, we beacon just in case.
     if(millis()-lastbeacon>10*60000){
-      beacon(23);
+      beacon(23,0);
       lastbeacon=millis();
     }
     
