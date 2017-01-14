@@ -156,13 +156,9 @@ long int uptime(){
 void beacon(int powernum, bool ping){
   
   //Serial.println("Transmitting..."); // Send a message to rf95_server
-  if (ping) {
-    Serial.println("ping");
-  } else {
-    Serial.println("noping");
-  }
+
   char radiopacket[RH_RF95_MAX_MESSAGE_LEN];
-  snprintf(radiopacket,
+ /* snprintf(radiopacket,
            RH_RF95_MAX_MESSAGE_LEN,
            //"BEACON %s VCC=%f count=%d uptime=%ld pwr=%d",
            "%s %s VCC=%f count=%d uptime=%ld pwr=%d",
@@ -172,9 +168,29 @@ void beacon(int powernum, bool ping){
            //packetnum,
            (ping) ? pingnum : packetnum,
            uptime(),
+           powernum);*/
+  if (ping) {
+      snprintf(radiopacket,
+           RH_RF95_MAX_MESSAGE_LEN,
+           //"BEACON %s count=%d pwr=%d",
+           "%s %s seq=%d pwr=%d",
+           "PING",
+           CALLSIGN,
+           pingnum,
            powernum);
-
-  Serial.print("TX "); Serial.print(packetnum); Serial.print(": "); Serial.println(radiopacket);
+  } else {
+      snprintf(radiopacket,
+           RH_RF95_MAX_MESSAGE_LEN,
+           //"BEACON %s VCC=%f count=%d uptime=%ld pwr=%d",
+           "%s %s VCC=%f count=%d uptime=%ld pwr=%d",
+           "BEACON",
+           CALLSIGN,
+           (float) voltage(),
+           packetnum,
+           uptime(),
+           powernum);
+  }
+  Serial.print("TX "); Serial.print((ping) ? pingnum : packetnum); Serial.print(": "); Serial.println(radiopacket);
   radiopacket[sizeof(radiopacket)] = 0;
 
   rf95.setTxPower(powernum, false);

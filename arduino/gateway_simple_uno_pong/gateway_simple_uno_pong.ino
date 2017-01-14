@@ -237,20 +237,42 @@ void digipeat(){
 
       if(shouldirt(buf,len)){
         bool ping_rx=0;
+        int rx_count=0;
         // Retransmit.
         Serial.println("TX ");
 
-          if(strcasestr((char*) buf, "PING")){
-            Serial.println("Received PING.\n");
-            ping_rx=1;
+        if(strcasestr((char*) buf, "PING")){
+          Serial.println("Received PING.\n");
+          ping_rx=1;
+    
+          // Read each command pair, spaces
+          char* parameters = strtok((char*) buf, " ");
+          while (parameters != 0){
+            // Split the command in two values when has =
+            char* values = strchr(parameters, '=');
+            // If we have a value:
+            if (values != 0){
+              // Actually split the string in 2: replace '=' with 0
+              *values = 0;
+              //String parameter = command;
+              ++values;
+              //int position = atoi(values);
+              if ((String) parameters == "seq"){
+                rx_count = atoi(values);
+              }
+            }
+           // Find the next command in input string
+           parameters = strtok(0, " ");
           }
+        }
         
         uint8_t data[RH_RF95_MAX_MESSAGE_LEN];
         if (strcasestr((char*) buf, "PING")) {
           snprintf((char*) data,
                    RH_RF95_MAX_MESSAGE_LEN,
-                   "PONG %s rssi=%d", //Then we append our call and strength
+                   "PONG %s seq=%d rssi=%d", //Then we append our call and strength
                    CALLSIGN,  //Repeater's callsign.
+                   (int) rx_count,
                    (int) rssi //Signal strength, for routing.
                    );  
         } else {
