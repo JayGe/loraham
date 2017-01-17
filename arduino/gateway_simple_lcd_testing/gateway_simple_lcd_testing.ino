@@ -5,7 +5,7 @@
 
 #define CALLSIGN "GI7UGV-1"
 
-#include <SPI.h>
+//#include <SPI.h>
 #include <RH_RF95.h>  //See http://www.airspayce.com/mikem/arduino/RadioHead/
 #include <Adafruit_SSD1306.h>
 

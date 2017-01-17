@@ -4,23 +4,23 @@
  */
 
 //Please change these two to describe your hardware.
-#define CALLSIGN "GI7UGV-6"
+#define CALLSIGN "UGV-UNO"
 #define COMMENTS "UNO Responder"
 
-#include <SPI.h>
+//#include <SPI.h>
 #include <RH_RF95.h>  //See http://www.airspayce.com/mikem/arduino/RadioHead/
  
 /* for feather32u4 
 #define RFM95_CS 8
 #define RFM95_RST 4
 #define RFM95_INT 7
-#define VBATPIN A9  /**/
+#define VBATPIN A9  */
  
-/* for feather m0  */
+/* for feather m0  
 #define RFM95_CS 8
 #define RFM95_RST 4
 #define RFM95_INT 3
-#define VBATPIN A7 /**/
+#define VBATPIN A7 */
 
 //Uncomment this line to use the UART instead of USB in M0.
 //#define Serial Serial1

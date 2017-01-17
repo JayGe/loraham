@@ -1,9 +1,9 @@
 /* This is a beacon for the LoRaHam protocol by KK4VCZ.
  * https://github.com/travisgoodspeed/loraham/
- *  
+ * Altered to send ping messages with B button, display pong responses from other gw, cycle power with C and display ping/beacon counts, A cycles last x messages
  */
 
-#define CALLSIGN "GI7UGV-1"
+#define CALLSIGN "UGV-FTR"
 
 #include <SPI.h>
 #include <RH_RF95.h>  //See http://www.airspayce.com/mikem/arduino/RadioHead/
@@ -28,7 +28,9 @@ int packetnum=0;
 int pingnum=0; 
 int powernum=5;
 
-String Last_Heard[5]={};
+#define Last_Number 10 // number of messages to store
+
+String Last_Heard[Last_Number]={};
 
 #if (SSD1306_LCDHEIGHT != 32)
 #error("Height incorrect, please fix Adafruit_SSD1306.h!");
@@ -278,7 +280,7 @@ void digipeat(){
       display.display();
       display.clearDisplay();
 
-      for (int k = 4; k > 0; k--){   
+      for (int k = 9; k > 0; k--){   
         Last_Heard[k] = Last_Heard[k-1];
       }
 
@@ -324,12 +326,12 @@ void loop(){
     BUTTON_A_STATE = 0;
     if ( BUTTON_A_STATE != LBUTTON_A_STATE) {
       LBUTTON_A_STATE = 0;
-      static int Times_Pressed=0;
+      static int Times_Pressed=Last_Number-1;
 
       display.clearDisplay();
       display.setCursor(0,0);
       display.setTextSize(1);
-      display.print(Times_Pressed+1);
+      display.print(Times_Pressed);
       display.print(" ");
       display.print(Last_Heard[Times_Pressed]);
       display.display();
@@ -340,10 +342,10 @@ void loop(){
         Serial.print(" ");
         Serial.println(Last_Heard[i]);
       }*/
-      if (Times_Pressed < 4) {
-        Times_Pressed++;
+      if (Times_Pressed > 0) { //counting down so tx/rt makes more sense
+        Times_Pressed--;
       } else {
-        Times_Pressed = 0;
+        Times_Pressed = Last_Number-1;
       }
 
     }
