@@ -1,6 +1,6 @@
 /* This is a beacon for the LoRaHam protocol by KK4VCZ.
  * https://github.com/travisgoodspeed/loraham/
- *  
+ * altered for uno, dragino board, and ping response
  */
 
 //Please change these two to describe your hardware.
@@ -196,6 +196,8 @@ bool shouldirt(uint8_t *buf, uint8_t len){
   
   //Random backoff if we might RT it.
   delay(random(1000));
+
+
   //Don't RT if we've gotten an incoming packet in that time.
   if(rf95.available()){
     //Serial.println("Interrupted by another packet.");
@@ -270,7 +272,7 @@ void digipeat(){
         if (strcasestr((char*) buf, "PING")) {
           snprintf((char*) data,
                    RH_RF95_MAX_MESSAGE_LEN,
-                   "PONG %s seq=%d rssi=%d", //Then we append our call and strength
+                   "PONG %s seq=%d rpt=%d", //Then we append our call and strength
                    CALLSIGN,  //Repeater's callsign.
                    (int) rx_count,
                    (int) rssi //Signal strength, for routing.

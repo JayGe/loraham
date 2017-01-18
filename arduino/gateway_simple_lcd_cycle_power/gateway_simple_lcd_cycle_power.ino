@@ -359,7 +359,7 @@ void loop(){
       Serial.println("Button B");
       display.setCursor(0,0);
       display.setTextSize(2);
-      display.print("Beacon TX ");
+      display.print("TX PING ");
       display.print(pingnum);
       display.print(" PWR ");
       display.print(powernum);
