@@ -229,7 +229,7 @@ bool shouldirt(uint8_t *buf, uint8_t len){
   
   //Random backoff if we might RT it.
   //delay(random(10000));
-  delay(random(1000));
+  delay(random(2000,3000));
   //Don't RT if we've gotten an incoming packet in that time.
   if(rf95.available()){
     //Serial.println("Interrupted by another packet.");

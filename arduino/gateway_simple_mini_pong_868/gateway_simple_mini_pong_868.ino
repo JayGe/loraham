@@ -4,12 +4,28 @@
  */
 
 //Please change these two to describe your hardware.
-#define CALLSIGN "UGV-UNO"
-#define COMMENTS "UNO Responder"
+#define CALLSIGN "UGV-MINI-869"
+#define COMMENTS "MINI 869 Pong"
+
+// SL18B20 Stuff
+#include <OneWire.h> 
+#include <DallasTemperature.h>
 
 //#include <SPI.h>
 #include <RH_RF95.h>  //See http://www.airspayce.com/mikem/arduino/RadioHead/
- 
+
+// DHT stuff
+#include <DHT.h>
+#define DHTTYPE DHT22
+#define DHTPIN  7
+
+DHT dht(DHTPIN, DHTTYPE);
+
+// SL18B20
+#define ONE_WIRE_BUS 5
+OneWire oneWire(ONE_WIRE_BUS); 
+DallasTemperature sensors(&oneWire);
+
 /* for feather32u4 
 #define RFM95_CS 8
 #define RFM95_RST 4
@@ -63,7 +79,7 @@
 
  
 // Change to 434.0 or other frequency, must match RX's freq!
-#define RF95_FREQ 434.4
+#define RF95_FREQ 869.5
  
 // Singleton instance of the radio driver
 RH_RF95 rf95(RFM95_CS, RFM95_INT);
@@ -84,7 +100,7 @@ float voltage(){
 }
 
 void radioon(){
-  Serial.println("UNO LoRa Responder!");
+  Serial.println("Mini LoRa Responder!");
   
   // manual reset
   digitalWrite(RFM95_RST, LOW);
@@ -126,6 +142,10 @@ void setup() {
   pinMode(LED, OUTPUT);     
   pinMode(RFM95_RST, OUTPUT);
   digitalWrite(RFM95_RST, HIGH);
+  
+  // Start the sensors
+  dht.begin();
+  sensors.begin(); 
 
   delay(1000);
   //while (!Serial);
@@ -158,6 +178,15 @@ long int uptime(){
 void beacon(){
   static int packetnum=0;
   float vcc=voltage();
+
+  float t = dht.readTemperature();
+  Serial.print("DHT22: "); 
+  Serial.println(t);
+  sensors.requestTemperatures(); // Send the command to get temperature readings 
+
+  float T = sensors.getTempCByIndex(0);
+  Serial.print("DS18B20: ");
+  Serial.println(T);
   
   //Serial.println("Transmitting..."); // Send a message to rf95_server
   
@@ -202,12 +231,11 @@ bool shouldirt(uint8_t *buf, uint8_t len){
   //Random backoff if we might RT it.
   delay(random(5000));
 
-/* Maybe put if not ping in here as its meaning only one response gets back
   //Don't RT if we've gotten an incoming packet in that time.
-  if(rf95.available()){
-    //Serial.println("Interrupted by another packet.");
-    return false;
-  }*/
+  //if(rf95.available()){
+  //  Serial.println("Interrupted by another packet.");
+  //  return false;
+  //}
 
   //No objections.  RT it!
   return true;
@@ -259,7 +287,7 @@ void digipeat(){
             char* values = strchr(parameters, '=');
             // If we have a value:
             if (values != 0){
-              // Actually split the string in 2: replace '=' with 0
+              // Actufpongally split the string in 2: replace '=' with 0
               *values = 0;
               //String parameter = command;
               ++values;
@@ -320,7 +348,8 @@ void loop(){
     digipeat();
 
     //Every ten minutes, we beacon just in case.
-    if(millis()-lastbeacon>10*60000){
+    //if(millis()-lastbeacon>10*60000){
+    if(millis()-lastbeacon>10*600){
       beacon();
       lastbeacon=millis();
     }
@@ -328,6 +357,7 @@ void loop(){
     //Transmit a beacon every ten minutes when battery is low.
     radiooff();
     delay(10*60000);
+
     radioon();
     beacon();
   };
